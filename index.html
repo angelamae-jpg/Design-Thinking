@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- PWA Connections (following your ILOILO TRAVEL ROUTE format) -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#3aac7c">
+<link rel="apple-touch-icon" href="/icon192.png">
+<link rel="icon" type="image/png" href="/icon192.png">
+
 <title>Neighborly Care</title>
 
 <style>
@@ -166,7 +173,8 @@ const fill=document.getElementById('fill'),
 percent=document.getElementById('percent'),
 status=document.getElementById('status'),
 alertBox=document.getElementById('alert'),
-logsEl=document.getElementById('logs');
+logsEl=document.getElementById('logs'),
+condSelect=document.getElementById('cond');
 
 const getLogs=()=>JSON.parse(localStorage.getItem('logs')||'[]');
 const saveLogs=l=>localStorage.setItem('logs',JSON.stringify(l));
@@ -189,7 +197,7 @@ function add(){
       id:Date.now(),
       time:new Date().toLocaleTimeString(),
       level:level+'%',
-      cond:cond.value
+      cond:condSelect.value
     });
     saveLogs(logs); render();
   }
@@ -228,6 +236,11 @@ function clearLogs(){
   if(confirm('Clear all logs?')){
     localStorage.removeItem('logs'); render();
   }
+}
+
+// PWA Service Worker Registration (following your ILOILO TRAVEL ROUTE format)
+if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('serviceworker.js');
 }
 
 update(); render();
