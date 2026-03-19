@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neighborly Care</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#f4f7fb;
+  margin:0;
+  padding:20px;
+  text-align:center;
+  color:#2c3e50;
+}
+
+h2{
+  margin-bottom:10px;
+}
+
+/* alert */
+.alert{
+  display:none;
+  background:#e74c3c;
+  color:#fff;
+  padding:10px 20px;
+  border-radius:30px;
+  margin:10px auto;
+  width:fit-content;
+  font-weight:bold;
+}
+.show{display:block}
+
+/* layout */
+.container{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:20px;
+  margin-top:10px;
+}
+
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:20px;
+  width:320px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* meter */
+.meter{
+  height:180px;
+  background:#d9e2ec;
+  border-radius:20px;
+  position:relative;
+  overflow:hidden;
+  margin:15px 0;
+}
+#fill{
+  height:0;
+  width:100%;
+  position:absolute;
+  bottom:0;
+  background:#3aac7c;
+  transition:0.3s;
+}
+#fill.high{background:#e74c3c}
+
+/* text */
+.status{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+/* controls */
+select,button{
+  margin:5px;
+  padding:8px 12px;
+  border-radius:20px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+button{
+  background:#ecf3fa;
+  cursor:pointer;
+  transition:0.2s;
+}
+button:hover{
+  background:#d2e3f5;
+}
+
+/* table */
+.table-wrap{
+  max-height:200px;
+  overflow:auto;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+td{
+  padding:6px;
+  border-bottom:1px solid #eee;
+  font-size:13px;
+}
+
+.action-btn{
+  border:none;
+  background:none;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Neighborly Care</h2>
+<div id="alert" class="alert">HIGH REPORTS · Check your neighbors</div>
+
+<div class="container">
+
+  <!-- left -->
+  <div class="card">
+    <h3>Community Level</h3>
+
+    <div class="meter">
+      <div id="fill"></div>
+    </div>
+
+    <div class="status">
+      <span id="percent">0</span>% - <span id="status">low</span>
+    </div>
+
+    <select id="cond">
+      <option>flu</option>
+      <option>allergy</option>
+      <option>fever</option>
+      <option>covid</option>
+      <option>dengue</option>
+      <option>other</option>
+    </select><br>
+
+    <button onclick="add()">➕ Add</button>
+    <button onclick="reset()">🔄 Reset</button>
+  </div>
+
+  <!-- right -->
+  <div class="card">
+    <h3>Logs</h3>
+    <div class="table-wrap">
+      <table>
+        <tbody id="logs"></tbody>
+      </table>
+    </div>
+    <button onclick="clearLogs()">Clear All</button>
+  </div>
+
+</div>
+
+<script>
+let level=0;
+const fill=document.getElementById('fill'),
+percent=document.getElementById('percent'),
+status=document.getElementById('status'),
+alertBox=document.getElementById('alert'),
+logsEl=document.getElementById('logs');
+
+const getLogs=()=>JSON.parse(localStorage.getItem('logs')||'[]');
+const saveLogs=l=>localStorage.setItem('logs',JSON.stringify(l));
+
+function update(){
+  fill.style.height=level+'%';
+  percent.textContent=level;
+
+  const high=level>=60;
+  fill.classList.toggle('high',high);
+  status.textContent=high?'high':'low';
+  alertBox.classList.toggle('show',high);
+}
+
+function add(){
+  if(level<100){
+    level+=10; update();
+    const logs=getLogs();
+    logs.push({
+      id:Date.now(),
+      time:new Date().toLocaleTimeString(),
+      level:level+'%',
+      cond:cond.value
+    });
+    saveLogs(logs); render();
+  }
+}
+
+function reset(){ level=0; update(); }
+
+function render(){
+  logsEl.innerHTML='';
+  getLogs().forEach(l=>{
+    logsEl.innerHTML+=`
+    <tr>
+      <td>${l.time}</td>
+      <td>${l.level}</td>
+      <td>${l.cond}</td>
+      <td>
+        <button class="action-btn" onclick="edit(${l.id})">✏️</button>
+        <button class="action-btn" onclick="del(${l.id})">❌</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function edit(id){
+  let logs=getLogs(),e=logs.find(x=>x.id==id);
+  let v=prompt('Edit condition:',e.cond);
+  if(v){ e.cond=v; saveLogs(logs); render(); }
+}
+
+function del(id){
+  saveLogs(getLogs().filter(x=>x.id!=id));
+  render();
+}
+
+function clearLogs(){
+  if(confirm('Clear all logs?')){
+    localStorage.removeItem('logs'); render();
+  }
+}
+
+update(); render();
+</script>
+
+</body>
+</html>
